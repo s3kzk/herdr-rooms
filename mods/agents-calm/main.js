@@ -1,3 +1,4 @@
+// Modified by s3kzk from Herdr App's shipped `agents` mod (0.1.12), Apache License 2.0. See NOTICE.md.
 // Agents in grouped or priority views; parents take their most urgent sub-agent's place.
 // A viewed done agent stays in Done until left.
 

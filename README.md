@@ -8,6 +8,8 @@ or soaking in a bathhouse tub under Mount Fuji.
 
 ![Rooms in the sidebar](preview-sidebar.png)
 
+日本語: [README.ja.md](README.ja.md)
+
 ## What you see
 
 | Status | The occupant |
@@ -36,7 +38,9 @@ or soaking in a bathhouse tub under Mount Fuji.
   Click to jump to the space or to the agent.
 
 The previews use the `catppuccin-mocha` theme: `rooms-top` with a 460px band, and `rooms`
-with a 480px sidebar. The spaces and agents in them are made up.
+with its default 268px sidebar. The spaces and agents in them are made up. The first one
+was taken with [git-graph](https://github.com/rabeeh-ta/herdr-git-graph) added, which is
+where its `Graph` button comes from.
 The layout itself follows your theme.
 
 ## Install
@@ -52,10 +56,7 @@ The layout itself follows your theme.
    | `mods/agents-calm/` | `~/.config/herdr-app/mods/` |
    | `mods/pane-calm/` | `~/.config/herdr-app/mods/` |
 
-2. Add [git-graph](https://github.com/rabeeh-ta/herdr-git-graph) for the right panel,
-   or remove the `graph` block from `rooms.json`.
-
-3. Check the mods and switch to the layout.
+2. Check the mods and switch to the layout.
 
    ```sh
    for m in rooms tabs-graph agents-calm pane-calm; do herdr-app check ~/.config/herdr-app/mods/$m; done
@@ -71,6 +72,9 @@ The layout itself follows your theme.
   or `rooms.toggle-place` in `keys.json`, or run them with `herdr-app do`.
 - The side/top button looks for the other layout by name: `<name>` and `<name>-top`.
   Keep that pair if you rename them.
+- A `Graph` button appears in the tab bar only if you add the
+  [git-graph](https://github.com/rabeeh-ta/herdr-git-graph) mod and a block with
+  `"id": "graph"` and `"mod": "git-graph"` to the `panel-body` stack of both layouts.
 - It is built to stay light. Every picture is a static SVG, and an occupant hops
   only for its first 3 seconds of work.
 - `agents-calm` and `pane-calm` are Herdr's own agent list and pane header
@@ -80,7 +84,7 @@ The layout itself follows your theme.
 
 ## License
 
-Apache-2.0. `NOTICE` lists the parts taken from Herdr and herdr-session-titles.
+Apache-2.0. `NOTICE` lists the parts taken from Herdr, herdr-session-titles and herdr-git-graph.
 
 Agent names and marks belong to their owners.
 The occupant sprites are fan art drawn after them and grant no trademark rights.

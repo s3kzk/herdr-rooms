@@ -1,20 +1,32 @@
 herdr-rooms
 Copyright 2026 s3kzk
 
+Licensed under the Apache License, Version 2.0 (LICENSE).
+
 This product includes software derived from Herdr
 (https://github.com/herdrdev/herdr-app), Copyright the Herdr authors,
 licensed under the Apache License, Version 2.0:
 
-- mods/tabs-graph/ is a copy of Herdr 0.1.9's shipped `tabs` mod with a Graph button added
-  and its working spinner held still.
-- mods/agents-calm/ and mods/pane-calm/ are copies of Herdr 0.1.12's shipped `agents`
-  and `pane` mods with their working spinner held still.
+- layouts/rooms.json and layouts/rooms-top.json start from Herdr 0.1.10's
+  shipped `main` layout.
+- mods/tabs-graph/ is a modified copy of Herdr 0.1.9's shipped `tabs` mod.
+- mods/agents-calm/ and mods/pane-calm/ are modified copies of Herdr 0.1.12's
+  shipped `agents` and `pane` mods.
+
+Each of those mod folders has a NOTICE.md that says what was changed, and its
+main.js says so on its first line.
+
+The Graph button in mods/tabs-graph/ follows the steps in docs/top-bar.md of
+herdr-git-graph (https://github.com/rabeeh-ta/herdr-git-graph),
+Copyright (c) 2026 Rabeeh T A, licensed under the MIT License. That mod is not
+included here.
 
 This product includes software from herdr-session-titles
 (https://github.com/choam2426/herdr-session-titles), Copyright 2026 choam2426,
 licensed under the Apache License, Version 2.0:
 
-- mods/rooms/session.js is based on that project's session-title parser.
+- mods/rooms/session.js is that project's mods/session-titles-agents/session.js.
+  Changed by s3kzk: only the comment on lines 2-3, which names where it came from.
 
 The occupant sprites for agents other than Claude Code are pixel art drawn after
 the agent icons Herdr ships (from LobeHub icons, MIT, and the agents' own marks).

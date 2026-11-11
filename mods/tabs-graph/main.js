@@ -1,3 +1,4 @@
+// Modified by s3kzk from Herdr App's shipped `tabs` mod (0.1.9), Apache License 2.0. See NOTICE.md.
 import { View, div, svg, image } from "gpui-kit";
 import { h_flex } from "gpui-base";
 import { spaces, panes, run, openOverlay, theme, window, shared, layout, settings } from "herdr";
@@ -77,7 +78,9 @@ export default class Tabs extends View {
       ? Math.max(10, (root.traffic_lights[0] + 64) / settings().zoom - (sidebar?.hidden ? 0 : sidebar?.size?.px ?? 0))
       : 10;
     const panel = find(root, "panel"), body = find(root, "panel-body");
-    const enabled = [...(shared("workspace.panels") ?? ["files", "changes"]), "graph"];
+    // Graph は git-graph の mod を入れて、レイアウトに graph のブロックを置いたときだけ出す（同梱しないため）
+    const graph = Boolean(find(root, "graph"));
+    const enabled = [...(shared("workspace.panels") ?? ["files", "changes"]), ...(graph ? ["graph"] : [])];
     this.syncPanel(space, panel, body, enabled);
     const panelButton = (id, label, icon) => {
       const on = panel && !panel.hidden && body?.active === id;
@@ -96,7 +99,7 @@ export default class Tabs extends View {
       .child(button("tab-new", "+", () => openOverlay({ mod: "new-menu", kind: "popup", width: 250, height: 512 })))
       .when(enabled.includes("files"), el => el.child(panelButton("files", "Files", "mods/files/file.svg")))
       .when(enabled.includes("changes"), el => el.child(panelButton("changes", "Changes", "mods/changes/changes.svg")))
-      .child(panelButton("graph", "Graph", "mods/git-graph/icons/graph.svg"))
+      .when(graph, el => el.child(panelButton("graph", "Graph", "mods/git-graph/icons/graph.svg")))
       .when(window()?.buttons, el => el.child(button("minimize", "−", () => run("window.minimize")))
         .child(button("maximize", "□", () => run("window.maximize")))
         .child(button("close-window", svg("mods/pane/close.svg").size(13), () => run("window.close"))));

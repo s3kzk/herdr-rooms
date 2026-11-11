@@ -1,3 +1,4 @@
+// Modified by s3kzk from Herdr App's shipped `pane` mod (0.1.12), Apache License 2.0. See NOTICE.md.
 // A pane's header, for layouts that frame their panes:
 //   { "tab": "active", "pane": { "header": { "content": { "mod": "pane-calm" } } } }
 // Shows the program's icon (the app's program table), the agent's name or
