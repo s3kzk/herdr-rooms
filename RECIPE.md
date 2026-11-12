@@ -200,8 +200,8 @@ Terminals have `terminal_padding` `[14, 12]` and full opacity.
   - Narrower than 160px, it becomes a rail of numbers and status marks with
     a `»` button that widens the sidebar back.
 - **Tabs.** Click selects, double-click renames, dragging a tab onto another
-  moves it there, right-click opens Herdr's tab `menu`, the scroll wheel
-  goes to the previous or next tab. `+` opens Herdr's `new-menu` (250 × 512).
+  moves it there, right-click opens Herdr's tab `menu`, the vertical scroll wheel
+  goes to the previous or next tab (a mostly horizontal swipe only scrolls the row). `+` opens Herdr's `new-menu` (250 × 512).
   `Files` and `Changes` open the panel on that view, or close it when that
   view is already showing. The panel's
   state is remembered per space and restored when you switch spaces.
