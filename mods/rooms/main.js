@@ -24,8 +24,9 @@
 // the panel redraws only when the size or columns picked for it change.
 import { View, div, svg, image } from "gpui-kit";
 import { v_flex, h_flex, Popup } from "gpui-base";
-import { spaces, agents, run, theme, settings, props, openOverlay, shared, setShared, layouts, window, nextCommand } from "herdr";
+import { spaces, agents, terminals, run, theme, settings, props, openOverlay, shared, setShared, layouts, window, nextCommand } from "herdr";
 import { session } from "./session.js";
+import { waitingSet, isWaiting, statusOf } from "./attention.js";
 import { Menu, menuItems, blankItems, menuHeight, probe, probeBlank, MENU_WIDTH } from "./menu.js";
 import { sunTimes } from "./sun.js";
 import { BUILDING_LIST, TOWNS, skyline, townSky, look, BUILDINGS, rise, windowTop, windowSides, backdrop, windowUnder, rivets } from "./looks.js";
@@ -357,8 +358,9 @@ export default class Rooms extends View {
   }
 
   // A shoulder badge: warning if anyone waits for you, else a check if anyone finished.
+  // Waiting includes what another mod publishes as attention.waiting (attention.js), when it does.
   badge(list, t) {
-    const waits = list.some((a) => a.status === "blocked");
+    const waits = list.some((a) => isWaiting(a, this.wait));
     const done = list.some((a) => a.status === "done");
     if (!waits && !done) return null;
     return h_flex().absolute().top(-9).right(-9).size(20).rounded(10).items_center().justify_center()
@@ -464,6 +466,10 @@ export default class Rooms extends View {
     this.uDef = Math.max(2, Math.round(3.2 * z)) / (z * 2);
     // One read of each per render: these copy every space and agent.
     const sp = spaces(), ag = agents();
+    // Who waits for you: Herdr's blocked, plus attention.waiting when a mod publishes it
+    // (terminals() is read only then, to drop entries left from an earlier turn).
+    const published = shared("attention.waiting");
+    this.wait = Array.isArray(published) ? waitingSet(published, terminals()) : null;
     const tabs = new Map(sp.flatMap((s) => s.tabs.map((tb) => [tb.id, tb])));
     const by = new Map(sp.map((s) => [s.id, []]));
     for (const a of ag) by.get(a.space)?.push(a);
@@ -475,7 +481,7 @@ export default class Rooms extends View {
     const recent = (s) => Math.max(0, ...by.get(s.id).map((a) => a.seq ?? 0));
     const rooms = [...sp].sort((x, y) => filled(y) - filled(x) || changed(y) - changed(x) || recent(y) - recent(x) || x.index - y.index);
     const count = { blocked: 0, done: 0, working: 0, idle: 0 };
-    for (const a of ag) count[status(a)] += 1;
+    for (const a of ag) count[statusOf(a, this.wait)] += 1;
     const now = Date.now(), was = this.started;
     this.started = new Map();
     for (const a of ag) if (status(a) === "working") this.started.set(a.address, was ? (was.get(a.address) ?? now) : 0);

@@ -60,6 +60,10 @@ English: [README.md](README.md)
 
 ## 知っておくこと
 
+- `Needs you` の件数・窓の警告の印・タブの点は、Herdr が blocked と報告しているエージェントを数えます。
+  ほかの mod が共有の値 `attention.waiting` を書いていれば（[herdr-approval-inbox](https://github.com/s3kzk/herdr-approval-inbox) は
+  返答の最後の判断待ちも載せます）、そこに載った端末も数えます。無ければ何も変わりません。詳しくは `RECIPE.md` の How it behaves を見てください。
+- テスト: `node --test tests/*.test.mjs`（Node 22）。
 - 部屋の右クリックメニューは `git`・`gh browse`・`open`・`pbcopy` を実行するので、
   macOS でしか動きません。ほかにプログラムを実行したり、ネットワークにつないだりするものはありません。
 - キーで操作できます。`keys.json` に `rooms.next-building`・`rooms.next-town`・`rooms.toggle-empty`・

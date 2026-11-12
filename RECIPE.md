@@ -108,7 +108,8 @@ lines drawn in the theme's `input` color. With no agents:
    29px pills, 12.8px text, 7px radius; the active one raised with a border
    and a close `x`. Each shows its program's icon, its name (an automatic
    `tbN` name shows the program's name or `Terminal`), ` Z` when zoomed, a
-   spinner while working and a 6px dot when blocked or done. On the right:
+   spinner while working and a 6px dot when blocked or done (blocked also when
+   one of its agents is in `attention.waiting`, see How it behaves). On the right:
    a `+` button, then `Files` and `Changes` buttons (`Graph` too, see Watch
    out), and on platforms that draw their own window buttons `−`, `□` and
    a close icon.
@@ -138,6 +139,19 @@ Terminals have `terminal_padding` `[14, 12]` and full opacity.
 | done | `Done` | Claw'd throws both arms up; happy `^ ^` eyes, blush, confetti | check badge (if no one waits) |
 | idle | `Idle` | closed eyes, a starry pointed nightcap, `Z`, a snot bubble | at night, a room where everyone is idle goes dark and its occupants dim to 0.8 opacity |
 
+- **Who waits for you** (the `Needs you` count, the warning badge, and the tab
+  dot in `tabs-graph`): an agent Herdr reports `blocked`, plus, when another
+  mod publishes the shared value `attention.waiting` (an array of
+  `{ address, kind, since, turn }`; herdr-approval-inbox writes it, adding
+  end-of-turn decisions that Herdr shows as done or idle), each listed
+  terminal that still exists, is not `working`, and whose `turn` still
+  matches `terminals()` when both are integers. Such an agent moves from its
+  own count to `Needs you` (it is never counted twice), and a tab with one
+  shows the `blocked` dot. Without the key, or if it is not an array, only
+  `blocked` counts, as before. The occupant's pose, the roster label and the
+  order inside a room still follow Herdr's status. The rule lives in
+  `attention.js`, copied unchanged into `mods/rooms` and `mods/tabs-graph`
+  so each stands alone.
 - The same agent always wears the same hat color (picked from four by a hash
   of its address).
 - A hop: the occupant moves one art pixel left and right and two up on every
@@ -375,6 +389,9 @@ icons `mods/pane/close.svg`, `mods/files/file.svg`,
 
 - `herdr-app check` passes for `mods/rooms`, `mods/agents-calm`,
   `mods/tabs-graph` and `mods/pane-calm`.
+- `node --test tests/*.test.mjs` (Node 22) passes: the `attention.waiting`
+  rule against both copies of `attention.js`, and `rooms` / `tabs-graph`
+  rendered against stand-ins for Herdr (`tests/harness`).
 - `herdr-app do layout.switch '{"name":"rooms"}'` shows a 268px sidebar with
   a brand strip, the building and an `Agents` list, and a work column with
   tabs, framed panes with 30px headers and a status bar.

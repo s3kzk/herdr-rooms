@@ -65,6 +65,12 @@ The layout itself follows your theme.
 
 ## Good to know
 
+- `Needs you`, the warning badge and the tab dot count agents Herdr reports as
+  blocked. If a mod publishes the shared value `attention.waiting` (as
+  [herdr-approval-inbox](https://github.com/s3kzk/herdr-approval-inbox) does,
+  adding end-of-turn decisions), the terminals listed there count too. Without
+  it nothing changes. Details in `RECIPE.md` → How it behaves.
+- Tests: `node --test tests/*.test.mjs` (Node 22).
 - The right-click menu on a room runs `git`, `gh browse`, `open` and `pbcopy`,
   so it works on macOS only.
   Nothing else runs programs or reaches the network.
