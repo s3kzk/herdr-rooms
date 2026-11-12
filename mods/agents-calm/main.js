@@ -4,7 +4,15 @@
 
 import { View, div, image, svg } from "gpui-kit";
 import { v_flex, h_flex } from "gpui-base";
-import { agents, terminals, panes, focused, spaces, run, theme, shared, setShared, setAgentOrder, openOverlay, closeOverlay, props, window, layout } from "herdr";
+import { agents, terminals, panes, focused, spaces, run, theme, shared, setShared, setAgentOrder, openOverlay, closeOverlay, props, window, layout, exec, home, watchFolder, readTextFile } from "herdr";
+
+// Claude Code の Agent ツールのサブエージェントは hc の端末を持たないので、
+// Claude Code の hook が端末ごとに書く記録から親の下に出す。
+// 終わった子は hook の SubagentStop で記録が消える。SubagentStop が来ずに残った記録は
+// meta.json の "finished" で落とす。CC_STALE はそれも読めない記録の保険（長いコマンドの実行中は
+// ツール呼び出しが無く updated が進まないので、短くすると動いている子が消える）。
+const CC_DIR = () => `${home()}/.local/state/herdr-subagents`;
+const CC_STALE = 3 * 3600000;
 
 function find(node, id) {
   if (node?.id === id) return node;
@@ -78,7 +86,61 @@ export default class Agents extends View {
     this.pendingPins = JSON.parse(localStorage.getItem("pins") ?? "[]");
     if (!this.pendingPins.length) localStorage.removeItem("pins");
     this.migratingPins = new Set();
-    cx.timer.every(30000, (cx) => cx.notify());
+    this.cc = [];
+    cx.timer.every(30000, (cx) => this.loadCC(cx));
+    cx.spawn(async (cx) => {
+      await exec("/bin/mkdir", ["-p", CC_DIR()]).catch(() => null);
+      this.loadCC(cx);
+      for (;;) {
+        await watchFolder(CC_DIR());
+        this.loadCC(cx);
+      }
+    });
+  }
+
+  loadCC(cx) {
+    cx.spawn(async (cx) => {
+      const r = await exec("/bin/sh", ["-c", 'for f in "$0"/*.json; do [ -f "$f" ] && cat "$f" && echo; done; true', CC_DIR()]).catch(() => null);
+      const now = Date.now();
+      const parsed = (r?.stdout ?? "").split("\n").flatMap((line) => {
+        try {
+          const c = JSON.parse(line);
+          return c?.terminal && c?.agent_id && now - (c.updated ?? 0) < CC_STALE ? [c] : [];
+        } catch {
+          return [];
+        }
+      });
+      // Claude Code は終わったサブエージェントの meta.json に "finished": true を書く
+      const finished = await Promise.all(parsed.map(async (c) => {
+        if (!c.meta_path) return false;
+        try {
+          return JSON.parse((await readTextFile(c.meta_path)) ?? "{}").finished === true;
+        } catch {
+          return false;
+        }
+      }));
+      const recs = parsed.filter((_c, i) => !finished[i]);
+      const nodes = new Map(recs.map((c) => [c.agent_id, { id: c.agent_id, terminal: c.terminal, parent: c.parent_agent_id || null, name: c.description || c.type, started: c.started ?? 0 }]));
+      // 子を待つ親はターンを終えた時点で SubagentStop が来て記録が消える。子の記録に写した説明で親の行を補う
+      for (const c of recs) {
+        const p = c.parent_agent_id;
+        if (p && !nodes.has(p)) nodes.set(p, { id: p, terminal: c.terminal, parent: null, name: c.parent_description || c.parent_type || p, started: c.started ?? 0 });
+      }
+      this.cc = [...nodes.values()].sort((x, y) => x.started - y.started);
+      cx.notify();
+    });
+  }
+
+  // Agent ツールのサブエージェントで、`addr`（端末、または `cc-<agent_id>` の親）の直下にいるもの。
+  // 端末が無いので hc の子と同じ形に寄せる。
+  ccKids(all, addr) {
+    const under = addr.startsWith("cc-")
+      ? (n) => n.parent === addr.slice(3)
+      : (n) => n.terminal === addr && !n.parent;
+    return this.cc.filter(under).map((n) => ({
+      address: `cc-${n.id}`, cc: true, owner: n.terminal, name: n.name, status: "working", state: "live",
+      program: all.find((t) => t.address === n.terminal)?.program,
+    }));
   }
 
   // Stamps agents whose state changed. Done and idle count as one: looking at a
@@ -168,7 +230,7 @@ export default class Agents extends View {
 
   // Live sub-agents of `addr`, depth first, each with the tree lines in front of it.
   tree(all, addr, lead = []) {
-    const kids = all.filter((k) => k.parent === addr && k.state === "live");
+    const kids = [...all.filter((k) => k.parent === addr && k.state === "live"), ...this.ccKids(all, addr)];
     return kids.flatMap((k, i) => {
       const last = i === kids.length - 1;
       return [
@@ -195,7 +257,8 @@ export default class Agents extends View {
       .text_size(12.5)
       .when(on, (el) => el.bg(t.raised))
       .hover((s) => s.bg(t.hover))
-      .on_click(() => this.peek(k.address))
+      // Agent ツールの子は覗ける端末が無いので、親の端末へ移る
+      .on_click(() => (k.cc ? run("pane.focus", { terminal: k.owner }) : this.peek(k.address)))
       .children(s.lines.map(l => div().self_start().mt(-4).w(9).h(17).mr(4).flex_none()
         .when(Boolean(l), el => el.border_l(1.5).border_color(t.input))
         .when(l === "└" || l === "├", el => el.border_b(1.5).rounded_bl(6))))
@@ -239,7 +302,9 @@ export default class Agents extends View {
     setAgentOrder(list.map((a) => a.address));
 
     const withKids = (a, i) => {
-      const subs = collapsed ? [] : this.tree(all, a.address);
+      // idle（done を含む）のサブエージェントは出さない。終わった子の知らせは親への報告で届くので、行は要らない。
+      // 親の行（オーケストレーター）は idle でも出す。
+      const subs = collapsed ? [] : this.tree(all, a.address).filter((s) => kidStatus(s.t, this.listed) !== "idle");
       const r = row(a, i, subs);
       if (this.folded.has(a.address)) return [r];
       return [r, ...subs.map((s) => this.subRow(t, s, shown, byPriority))];

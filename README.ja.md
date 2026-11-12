@@ -76,6 +76,9 @@ English: [README.md](README.md)
 - `agents-calm` と `pane-calm` は、Herdr 標準のエージェント一覧とペインの見出しの、回転する作業中の
   アイコンを止めたものです。画面に回転するアイコンがあると窓全体を 1 秒に約 30 回描き直し、
   手元の測定では CPU を約 9% 使っていました。
+- `agents-calm` は、Claude Code の Agent ツールのサブエージェントを親の下に並べることもできます。
+  `~/.local/state/herdr-subagents/` にサブエージェントごとの JSON の記録を読みます。記録は自分で用意した
+  Claude Code の hook が書く必要があり、無ければ何も増えません。
 - SVG は `mods/rooms/tools/` のスクリプトで作っています（そのフォルダの README を見てください）。
 
 ## ライセンス
